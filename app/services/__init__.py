@@ -1,0 +1,1 @@
+from .provider_registry import get_registry  # noqa: F401

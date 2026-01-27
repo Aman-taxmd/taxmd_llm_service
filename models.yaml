@@ -1,0 +1,20 @@
+# Dynamic model registry
+# Map friendly aliases to provider + model identifiers
+# GPU-optimized models for maximum performance
+
+models:
+  default:
+    provider: ollama
+    model_name: llama3.1-fast
+  llama3.1:
+    provider: ollama
+    model_name: llama3.1:8b
+  llama3.1-fast:
+    provider: ollama
+    model_name: llama3.1-fast
+  mistral:
+    provider: ollama
+    model_name: mistral
+  mistral-standard:
+    provider: ollama
+    model_name: mistral

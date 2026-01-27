@@ -1,0 +1,472 @@
+# Default values for Application.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+namespace: "ai"  #namespace for application
+replicaCount: 1   #Number of pod counts
+maxUnavailable: 0
+maxSurge: 50%
+terminationGracePeriodSeconds: 60
+
+
+image:
+  registry: docker.io   # Image for running container
+  repository: nginx # Image for running container
+  tag: latest              # Image tag version
+  pullPolicy: Always      # Image pull policy
+  port: 11434              # Application port number
+
+
+## startup probes for containers "https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/"
+
+# Enable livenessProbe true to check if the container is started and alive for health_url
+livenessProbe:
+  enabled: false
+  initialDelaySeconds: 30
+  periodSeconds: 10
+  health_url: /health
+  timeoutSeconds: 2
+  successThreshold: 1
+  failureThreshold: 3
+
+# Enable readinessProbe true to Indicates whether the Container is ready to service requests  for health_url 
+
+readinessProbe:
+  enabled: false
+  initialDelaySeconds: 60
+  periodSeconds: 10
+  health_url: /health
+  timeoutSeconds: 2
+  successThreshold: 1
+  failureThreshold: 3
+
+
+
+#imagePullSecrets: ap-south-1-ecr-registry
+
+# Name for application
+# nameOverride: ""
+# fullnameOverride: ""
+
+
+# To expose an application running on a set of Pods as a network service "https://kubernetes.io/docs/concepts/services-networking/service/"
+service:
+  isHeadless: false
+  type: ClusterIP
+  enableHttp: true
+  enableHttps: false
+  http_port: 11434
+  https_port: 11434
+  stable:
+    annotations: {}
+  canary:
+    annotations: {}
+  ports:
+    http: 11434
+    https: 443
+  nodePorts:
+    http: ""
+    https: ""
+  #port: 80
+  annotations: {}
+  loadBalancerSourceRanges: []
+
+# you can mention extra port here
+#extraPorts:
+
+
+# Declare values for environment varibale "https://kubernetes.io/docs/tasks/configure-pod-container/configure-pod-configmap/"
+configvalues: 
+  TZ: "Asia/Calcutta"
+
+# secrets works when configvalues is defined 
+secrets:
+  enabled: false
+  annotations: 
+    avp_path: "DevOps/test/secrets"
+    kv_version: "1"
+  values: "red"
+
+localsecrets:
+  enabled: true
+  annotations: 
+    avp_path: "DevOps/test/secrets"
+    kv_version: "1"
+  values: 
+     username: dXNlcm5hbWU=  
+     password: cGFzc3dvcmQ= 
+
+    #   username: dXNlcm5hbWU=  
+    #  password: cGFzc3dvcmQ= 
+    
+
+externalsecrets:
+  enabled: false
+  annotations: {}
+  name: ""
+
+
+# Enable ingress true and define hosname and annotations to manages external access to the services in a cluster "https://kubernetes.io/docs/concepts/services-networking/ingress/"
+
+ingress:
+  enabled: false
+  annotations: 
+    kubernetes.io/ingress.class: alb
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/group.name: dev-test
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS": 443}]'
+    alb.ingress.kubernetes.io/certificate-arn: xxxxxxxxxxxxxxxxxx
+    alb.ingress.kubernetes.io/ssl-redirect: "443"
+  labels: {}
+  path: /
+  hosts:  
+    - www.example.com 
+  ## Extra paths to prepend to every host configuration. This is useful when working with annotation based services.
+  extraPaths: []
+  # - path: /*
+  #   backend:
+  #     serviceName: ssl-redirect
+  #     servicePort: use-annotation
+  tls: []
+  ingressClassName: alb
+  #  - secretName: chart-example-tls
+  #    hosts:
+  #      - chart-example.local
+
+
+# Uncomment for Managing Resources for Containers "https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/"
+
+resources:
+  requests:
+    nvidia.com/gpu: 1
+  limits:
+    nvidia.com/gpu: 1
+
+
+dnsconfig:
+  enabled: true
+
+istioRevision:
+  enabled: true
+  version: default
+
+podannotation:
+  enabled: true
+  annotation: 
+    prometheus.io/port: "8080"
+    prometheus.io/scrape: "true"
+  checksum:
+    enabled: true
+
+rollout_vt_a:
+  enabled: "false"
+
+rollout_vt_b:
+  enabled: "false"
+
+# Enable autoscaling "true" for Scales the number of Pods in a replication controller, deployment, replica set or stateful set based on observed CPU utilization (or, with custom metrics support "https://kubernetes.io/blog/2016/07/autoscaling-in-kubernetes/"
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 2
+  targetCPUUtilizationPercentage: 90
+  # targetMemoryUtilizationPercentage: 80
+  hpaannotation:
+    enabled: false
+    annotation: {}
+
+  metrics: #{}
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 60
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 60
+  behavior: 
+    scaleUp:
+      selectPolicy: Max
+      stabilizationWindowSeconds: 0
+      policies:
+        - type: Percent
+          value: 10
+          periodSeconds: 30
+    scaleDown:
+      selectPolicy: Min
+      stabilizationWindowSeconds: 120
+      policies:
+        - type: Percent
+          value: 10
+          periodSeconds: 30
+  keda:
+    enabled: false
+    pollingInterval: 180
+    advanced:                                          # Optional. Section to specify advanced options
+      horizontalPodAutoscalerConfig:                   # Optional. Section to specify HPA related options
+        behavior:                                      # Optional. Use to modify HPA's scaling behavior
+          scaleDown:
+            stabilizationWindowSeconds: 600
+            policies:
+            - type: Pods
+              value: 5
+              periodSeconds: 300
+          scaleUp:
+            stabilizationWindowSeconds: 0
+            policies:
+            - type: Pods
+              value: 5
+              periodSeconds: 300
+    additionaltriggers:
+    - type: kafka
+      metadata:
+        bootstrapServers: 10.10.10.10:9091
+        consumerGroup: abc
+        topic: test
+        lagThreshold: "10000"
+
+# For scheduling  pods to particular nodes "https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/"
+
+nodeSelector: {}
+
+# Tolerations are applied to pods, and allow (but do not require) the pods to schedule onto nodes with matching taints "https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/"
+
+tolerations:  
+- key: "nvidia.com/gpu"
+  operator: "Exists"
+  effect: "NoSchedule"
+
+# "https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/"
+
+affinity: {}
+  # nodeAffinity:
+  #   preferredDuringSchedulingIgnoredDuringExecution:
+  #     - weight: 100
+  #       preference:
+  #         matchExpressions:
+  #         - key: another-node-label-key
+  #           operator: In
+  #           values:
+  #           - another-node-label-value
+
+# Number of concurrent disruptions that your application experiences, allowing for higher availability while permitting the cluster administrator to manage the clusters nodes "https://kubernetes.io/docs/tasks/run-application/configure-pdb/"  
+
+disruption:
+  minAvailable: 1
+
+# A service account provides an identity for processes that run in a Pod "https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/"
+
+destinationrule:
+  enabled: true
+  warmupdurationsec: 120s
+
+lifecycle:
+  enabled: false
+  lifecycleprestop:
+    preStop:
+      exec:
+        command: [ "sh", "-c", "sleep 15" ]
+
+serviceAccount:
+  create: false
+  serviceAccountAnnotations: {}
+
+### add rules to rbac.rules to create role and rolebinding 
+rbac:
+  rules: []
+  # - apiGroups: [""]
+  #   resources:
+  #   - pods
+  #   verbs:
+  #   - list
+  #   - get
+
+# Enable cronjob for use a CronJob to run Jobs on a time-based schedule. These automated jobs run like Cron tasks on a Linux or UNIX system "https://kubernetes.io/docs/tasks/job/automated-tasks-with-cron-jobs/"
+
+cronjob:
+  enabled: false
+  crons:
+    "0":
+      name: certification
+      schedule: "0 * * * *"
+      successfulJobsHistoryLimit: 5
+      failedJobsHistoryLimit: 5
+      args: "python manage.py runscript scripts.cron.certification"
+    "1":
+      name: upload
+      schedule: "*/30 * * * *"
+      successfulJobsHistoryLimit: 5
+      failedJobsHistoryLimit: 5
+      args: "python manage.py runscript scripts.cron.upload"
+
+rollout:
+  enabled: "false"
+#  strategy:
+#    canary:
+#      maxUnavailable: "50%"
+#      maxSurge: "100%"
+#      steps:
+#        - setCanaryScale:
+#            replicas: 1
+#        - setWeight: 1
+#        - pause: {}
+#        - setCanaryScale:
+#            weight: 50
+#        - setWeight: 1
+#        - pause: {}
+#        - setCanaryScale:
+#            weight: 100
+#        - setWeight: 1
+#        - pause: {}
+#        - setWeight: 5
+#        - pause: {}
+#        - setWeight: 25
+#        - pause: {}
+#        - setWeight: 50
+#        - pause: {}
+#        - setWeight: 100
+#        - pause: {}
+#      canaryService: test-app-service-canary
+#      stableService: test-app-service
+#      trafficRouting:
+#        istio:
+#          virtualServices:
+#            - name: test-app-service
+#              routes:
+#                - primary # At least one route is required
+#            - name: { { include "test-app-service.fullname" . } }-internal
+#              routes:
+#                - internal # At least one route is required
+
+## Use this block to enable the service monitor
+## Make sure that release: prometheus is added as additional labels
+
+prometheus:
+  monitor:
+    enabled: false
+    additionalLabels: 
+      release: prometheus
+    namespace: ""
+    honorLabels: false
+
+
+## Use this block to configure persistent volume to be used with application
+## Also make sure that storageClass being used supports ReadWriteMany mode as app deployment can run multiple replicas.
+
+persistence:
+  enabled: false
+  storageClass: efs-sc
+  mountPath: /tmp
+  storage: 5Gi
+  
+
+# extraVolumes: 
+#   - hostPath:
+#       path: /var/log/data/abc
+#       type: DirectoryOrCreate
+#     name: logs
+
+# extraVolumeMounts: 
+#   - mountPath: /viewcorp/logs/
+#     name: logs
+
+# extraInitContainers: 
+#   - name: init1
+#     image: aws-account.dkr.ecr.ap-south-1.amazonaws.com/infra:busybox-latest-lg
+#     command:
+#     - chown
+#     - -R
+#     - 100:100
+#     - /viewcorp
+#     volumeMounts:
+#     - name: logs
+#       mountPath: /viewcorp
+
+
+istio:
+  enabled: false
+  virtualService:
+    enabled: false
+    virtualServices:
+      "0":
+        name: hello-app
+        gateways:
+           - gateway-new
+        hosts:
+          - prod.abc.com
+        apps:
+        - name: primary
+          path: "/api"
+          routes:
+            "0":
+              weight: 100
+              port: 8080
+              name: hello-app
+            "1":
+              weight: 0
+              port: 8080
+              name: hello-app-canary
+
+#      "1":
+#          name: hello-app-internal
+#          gateways:
+#            - mesh
+#          hosts:
+#            - hello-app.test.prod.svc.cluster.local
+#          apps:
+#          - name: internal
+#            path: "/api"
+#            routes:
+#              "0":
+#                weight: 100
+#                port: 9090
+#                name: hello-app
+#              "1":
+#                weight: 0
+#                port: 9090
+#                name: hello-app-canary
+
+
+
+sidecar: {}
+  # - name: mitten
+  #   image: aws-account.dkr.ecr.ap-south-1.amazonaws.com/mittens:1.44.0
+  #   resources:
+  #     limits:
+  #       cpu:  300m
+  #       memory: 500Mi
+  #     requests:
+  #       cpu: 50m
+  #       memory: 50Mi
+  #   imagePullPolicy: Always
+  #   readinessProbe:
+  #     exec:
+  #       command:
+  #       - "cat"
+  #       - "ready"
+  #     initialDelaySeconds: 40
+  #     periodSeconds: 30
+  #     successThreshold: 1
+  #     timeoutSeconds: 1
+  #   livenessProbe:
+  #     exec:
+  #       command:
+  #       - "cat"
+  #       - "alive"
+  #     initialDelaySeconds: 40
+  #     periodSeconds: 30
+  #     successThreshold: 1
+  #     timeoutSeconds: 1
+  #   args:
+  #   - "--concurrency=3"
+  #   - "--max-duration-seconds=60"
+  #   - "--target-readiness-http-path=/application/actuator/health"
+  #   - "--target-grpc-port=9090"
+  #   - "--grpc-requests=grpc.health.v1.Health/Check"
+  #   - "--target-insecure=true"

@@ -1,0 +1,38 @@
+# Production: one service = FastAPI + boto3 → AWS Bedrock
+# Model switching: change .env (LLM_FAMILY, LLM_MODEL) and restart.
+# Local: use env vars or .env. Prod: use IAM role (no AWS_ACCESS_KEY in .env).
+
+version: "3.9"
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: bedrock-llm-api
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      - LLM_PROVIDER=${LLM_PROVIDER:-bedrock}
+      - LLM_FAMILY=${LLM_FAMILY:-claude}
+      - LLM_MODEL=${LLM_MODEL:-}
+      - LLM_MAX_TOKENS=${LLM_MAX_TOKENS:-}
+      - LLM_TEMPERATURE=${LLM_TEMPERATURE:-}
+      - LLM_STREAMING=${LLM_STREAMING:-true}
+      - AWS_REGION=${AWS_REGION:-us-east-1}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID:-}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY:-}
+      - BEDROCK_TIMEOUT=${BEDROCK_TIMEOUT:-120}
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+      - PORT=${PORT:-8000}
+    ports:
+      - "${PORT:-8000}:${PORT:-8000}"
+    volumes:
+      - ./.env:/app/.env:ro
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health/live"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s

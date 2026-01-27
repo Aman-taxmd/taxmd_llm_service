@@ -1,0 +1,274 @@
+{
+	"info": {
+		"_postman_id": "ai-review-api-collection",
+		"name": "AI Review API (Bedrock)",
+		"description": "Production Bedrock LLM API. Models: Claude, LLaMA, Ministral, Titan. Switch via .env (LLM_FAMILY, LLM_MODEL) or per-request `model` body field.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"variable": [
+		{ "key": "baseUrl", "value": "http://localhost:8000", "type": "string" },
+		{ "key": "modelClaude", "value": "anthropic.claude-haiku-4-5-20251001-v1:0", "type": "string" },
+		{ "key": "modelLlama", "value": "meta.llama3-8b-instruct-v1:0", "type": "string" },
+		{ "key": "modelMinistral", "value": "mistral.mistral-small-2402-v1:0", "type": "string" },
+		{ "key": "modelTitan", "value": "amazon.titan-text-express-v1", "type": "string" }
+	],
+	"item": [
+		{
+			"name": "Health",
+			"item": [
+				{
+					"name": "Root",
+					"request": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}/", "host": ["{{baseUrl}}"], "path": [""] } },
+					"response": []
+				},
+				{
+					"name": "Live",
+					"request": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}/health/live", "host": ["{{baseUrl}}"], "path": ["health", "live"] } },
+					"response": []
+				},
+				{
+					"name": "Ready",
+					"request": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}/health/ready", "host": ["{{baseUrl}}"], "path": ["health", "ready"] } },
+					"response": []
+				},
+				{
+					"name": "Performance (config)",
+					"request": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}/health/performance", "host": ["{{baseUrl}}"], "path": ["health", "performance"] } },
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Chat – Default (uses .env LLM_FAMILY/LLM_MODEL)",
+			"item": [
+				{
+					"name": "Default model",
+					"request": {
+						"method": "POST",
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"messages\": [\n    { \"role\": \"user\", \"content\": \"Hello! What model are you?\" }\n  ],\n  \"temperature\": 0.7,\n  \"max_tokens\": 100\n}"
+						},
+						"url": { "raw": "{{baseUrl}}/v1/chat", "host": ["{{baseUrl}}"], "path": ["v1", "chat"] }
+					},
+					"response": []
+				},
+				{
+					"name": "With system prompt",
+					"request": {
+						"method": "POST",
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"system\": \"You are a helpful tax assistant.\",\n  \"messages\": [\n    { \"role\": \"user\", \"content\": \"What is the standard deduction for 2024?\" }\n  ],\n  \"temperature\": 0.3,\n  \"max_tokens\": 200\n}"
+						},
+						"url": { "raw": "{{baseUrl}}/v1/chat", "host": ["{{baseUrl}}"], "path": ["v1", "chat"] }
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Chat – Claude",
+			"item": [
+				{
+					"name": "Claude – default (Sonnet)",
+					"request": {
+						"method": "POST",
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"model\": \"{{modelClaude}}\",\n  \"messages\": [\n    { \"role\": \"user\", \"content\": \"Explain tax brackets in one paragraph.\" }\n  ],\n  \"temperature\": 0.3,\n  \"max_tokens\": 200\n}"
+						},
+						"url": { "raw": "{{baseUrl}}/v1/chat", "host": ["{{baseUrl}}"], "path": ["v1", "chat"] }
+					},
+					"response": []
+				},
+				{
+					"name": "Claude Haiku (explicit ID)",
+					"request": {
+						"method": "POST",
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"model\": \"anthropic.claude-3-5-haiku-20241022-v1:0\",\n  \"messages\": [\n    { \"role\": \"user\", \"content\": \"What is a W-2?\" }\n  ],\n  \"temperature\": 0.2,\n  \"max_tokens\": 150\n}"
+						},
+						"url": { "raw": "{{baseUrl}}/v1/chat", "host": ["{{baseUrl}}"], "path": ["v1", "chat"] }
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Chat – LLaMA",
+			"item": [
+				{
+					"name": "LLaMA 8B",
+					"request": {
+						"method": "POST",
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"model\": \"{{modelLlama}}\",\n  \"messages\": [\n    { \"role\": \"user\", \"content\": \"Explain LLC vs S-Corp in two sentences.\" }\n  ],\n  \"temperature\": 0.3,\n  \"max_tokens\": 200\n}"
+						},
+						"url": { "raw": "{{baseUrl}}/v1/chat", "host": ["{{baseUrl}}"], "path": ["v1", "chat"] }
+					},
+					"response": []
+				},
+				{
+					"name": "LLaMA 70B",
+					"request": {
+						"method": "POST",
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"model\": \"meta.llama3-70b-instruct-v1:0\",\n  \"messages\": [\n    { \"role\": \"user\", \"content\": \"Summarize tax loss harvesting.\" }\n  ],\n  \"temperature\": 0.3,\n  \"max_tokens\": 250\n}"
+						},
+						"url": { "raw": "{{baseUrl}}/v1/chat", "host": ["{{baseUrl}}"], "path": ["v1", "chat"] }
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Chat – Ministral (Mistral)",
+			"item": [
+				{
+					"name": "Ministral Small",
+					"request": {
+						"method": "POST",
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"model\": \"{{modelMinistral}}\",\n  \"messages\": [\n    { \"role\": \"user\", \"content\": \"What is Schedule C?\" }\n  ],\n  \"temperature\": 0.3,\n  \"max_tokens\": 200\n}"
+						},
+						"url": { "raw": "{{baseUrl}}/v1/chat", "host": ["{{baseUrl}}"], "path": ["v1", "chat"] }
+					},
+					"response": []
+				},
+				{
+					"name": "Mixtral 8x7B",
+					"request": {
+						"method": "POST",
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"model\": \"mistral.mixtral-8x7b-instruct-v0:1\",\n  \"messages\": [\n    { \"role\": \"user\", \"content\": \"Write a short Python snippet for simple interest.\" }\n  ],\n  \"temperature\": 0.2,\n  \"max_tokens\": 300\n}"
+						},
+						"url": { "raw": "{{baseUrl}}/v1/chat", "host": ["{{baseUrl}}"], "path": ["v1", "chat"] }
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Chat – Titan",
+			"item": [
+				{
+					"name": "Titan Express",
+					"request": {
+						"method": "POST",
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"model\": \"{{modelTitan}}\",\n  \"messages\": [\n    { \"role\": \"user\", \"content\": \"What is a 1099 form?\" }\n  ],\n  \"temperature\": 0.3,\n  \"max_tokens\": 150\n}"
+						},
+						"url": { "raw": "{{baseUrl}}/v1/chat", "host": ["{{baseUrl}}"], "path": ["v1", "chat"] }
+					},
+					"response": []
+				},
+				{
+					"name": "Titan Lite",
+					"request": {
+						"method": "POST",
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"model\": \"amazon.titan-text-lite-v1\",\n  \"messages\": [\n    { \"role\": \"user\", \"content\": \"One sentence: what is taxable income?\" }\n  ],\n  \"temperature\": 0.2,\n  \"max_tokens\": 80\n}"
+						},
+						"url": { "raw": "{{baseUrl}}/v1/chat", "host": ["{{baseUrl}}"], "path": ["v1", "chat"] }
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Streaming",
+			"item": [
+				{
+					"name": "Stream – default model",
+					"request": {
+						"method": "POST",
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"messages\": [\n    { \"role\": \"user\", \"content\": \"List three tax deductions for freelancers.\" }\n  ],\n  \"temperature\": 0.3,\n  \"max_tokens\": 300,\n  \"stream\": true\n}"
+						},
+						"url": { "raw": "{{baseUrl}}/v1/chat", "host": ["{{baseUrl}}"], "path": ["v1", "chat"] }
+					},
+					"response": []
+				},
+				{
+					"name": "Stream – Claude",
+					"request": {
+						"method": "POST",
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"model\": \"{{modelClaude}}\",\n  \"messages\": [\n    { \"role\": \"user\", \"content\": \"Explain capital gains in 2 short paragraphs.\" }\n  ],\n  \"temperature\": 0.3,\n  \"max_tokens\": 400,\n  \"stream\": true\n}"
+						},
+						"url": { "raw": "{{baseUrl}}/v1/chat", "host": ["{{baseUrl}}"], "path": ["v1", "chat"] }
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Tax use cases",
+			"item": [
+				{
+					"name": "Tax form guidance",
+					"request": {
+						"method": "POST",
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"model\": \"{{modelClaude}}\",\n  \"system\": \"You are a tax professional assistant.\",\n  \"messages\": [\n    { \"role\": \"user\", \"content\": \"What business expenses can I deduct on Schedule C?\" }\n  ],\n  \"temperature\": 0.2,\n  \"max_tokens\": 400\n}"
+						},
+						"url": { "raw": "{{baseUrl}}/v1/chat", "host": ["{{baseUrl}}"], "path": ["v1", "chat"] }
+					},
+					"response": []
+				},
+				{
+					"name": "Tax strategy",
+					"request": {
+						"method": "POST",
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"model\": \"{{modelClaude}}\",\n  \"system\": \"You are a tax planning strategist.\",\n  \"messages\": [\n    { \"role\": \"user\", \"content\": \"Tax-efficient strategies for 401k/IRA distributions in retirement?\" }\n  ],\n  \"temperature\": 0.4,\n  \"max_tokens\": 450\n}"
+						},
+						"url": { "raw": "{{baseUrl}}/v1/chat", "host": ["{{baseUrl}}"], "path": ["v1", "chat"] }
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Docs",
+			"item": [
+				{
+					"name": "OpenAPI (Swagger)",
+					"request": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}/docs", "host": ["{{baseUrl}}"], "path": ["docs"] } },
+					"response": []
+				},
+				{
+					"name": "OpenAPI JSON",
+					"request": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}/openapi.json", "host": ["{{baseUrl}}"], "path": ["openapi.json"] } },
+					"response": []
+				}
+			]
+		}
+	]
+}
