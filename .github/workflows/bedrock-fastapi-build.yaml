@@ -1,0 +1,36 @@
+name: BedRock-FastApi - Build
+
+on:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: 'Branch to deploy'
+        required: true
+        default: 'main'
+      env:
+        description: 'Environment to deploy'
+        required: true
+        type: choice
+        options:
+          - dev
+          - stg
+          - prd
+
+
+jobs:
+  call-build:
+    name: Workflow  
+    uses: TaxMD/taxmd-artifacts/.github/workflows/build-v1.yaml@main
+    with:
+      branch: ${{ inputs.branch }}
+      env: ${{ inputs.env }}
+      repo_name: ${{ github.repository }}
+      env_file_name: "app.env"
+    secrets:
+      GIT_TOKEN: ${{ secrets.GIT_TOKEN }}
+    permissions:
+        id-token: write
+        contents: read
+
+
+
